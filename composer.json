@@ -1,0 +1,21 @@
+{
+    "name": "mikekeane/dispatch-system",
+    "description": "Technical Test for Gear4Music Interview",
+    "authors": [
+        {
+            "name": "Mike",
+            "email": "19keane86@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "7.4.*",
+        "symfony/console": "5.1.*",
+        "ext-ftp": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/objects",
+            "Commands\\": "src/commands"
+        }
+    }
+}
