@@ -6,6 +6,8 @@ require_once __DIR__ . "/../../vendor/autoload.php";
 
 use App\DispatchPeriod;
 use App\Courier;
+use Exceptions\ConsignmentException;
+use Exceptions\CourierException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -57,8 +59,21 @@ class AddConsignmentCommand extends Command {
         $dp = DispatchPeriod::get();
 
         //generate consignment
-        $courier = new Courier($courierName);
-        $cons = $courier->generateConsignment($description);
+        $courier = null;
+        try {
+            $courier = new Courier($courierName);
+        } catch(CourierException $ce) {
+            $output->writeln("<info>" . $ce->getMessage() . "</info>");
+            return COMMAND::FAILURE;
+        }
+
+        $cons = null;
+        try {
+            $cons = $courier->generateConsignment($description);
+        } catch(ConsignmentException $ce) {
+            $output->writeln("<info>" . $ce->getMessage() . "</info>");
+        }
+
         $cons->setCourierName($courierName);
 
         //add the consignment to the Dispatch Period

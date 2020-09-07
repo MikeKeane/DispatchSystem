@@ -2,6 +2,11 @@
 
 namespace App;
 
+include_once __DIR__ . "/../../vendor/autoload.php";
+
+use Exceptions\BatchException;
+use Exceptions\ConsignmentException;
+
 /**
  * Class DispatchPeriod
  *
@@ -68,6 +73,7 @@ class DispatchPeriod {
     /**
      * Starts the Dispatch Period
      *
+     * @throws \Exceptions\BatchException;
      * @return int
      */
     public function start() {
@@ -76,9 +82,9 @@ class DispatchPeriod {
         if($this->startTime == null) {
             $this->startTime = date("Y-m-d H:i:s");
             $this->save();
-            return 0; //successful start
+            return 0;
         } else {
-            return 1; //dispatch period already started
+            throw new BatchException("Dispatch Period was already started @ " . $this->startTime);
         }
     }
 
@@ -94,12 +100,13 @@ class DispatchPeriod {
     /**
      * Stops the active Dispatch Period
      *
+     * @throws \Exceptions\BatchException
      * @return int
      */
     public function stop() {
         //check if there is an active Dispatch Period to stop
         if(file_get_contents(__DIR__ . "/../../data-store/dispatchPeriod.txt") == "") {
-            return 1; //No current dispatch period to stop
+            throw new BatchException("There is no active Dispatch Period to stop");
         }
 
         //remove contents from save file
@@ -148,8 +155,15 @@ class DispatchPeriod {
 
     /**
      * Uploads the Dispatch period's Consignments
+     *
+     * @throws \Exceptions\ConsignmentException
+     * @throws \Exceptions\CourierException
      */
     public function uploadConsignments() {
+        if(sizeof($this->consignments) < 1) {
+            throw new ConsignmentException("There are no consignments to upload");
+        }
+
         foreach($this->consignments as $courierName => $consignments) {
             $courier = new Courier($courierName);
 

@@ -11,6 +11,7 @@ namespace Commands;
 require_once __DIR__ . "/../../vendor/autoload.php";
 
 use App\DispatchPeriod;
+use Exceptions\BatchException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -49,18 +50,20 @@ class StartBatchCommand extends Command {
         //get the active Dispatch Period - if it does not exist, it is created
         $dp = DispatchPeriod::get();
 
-        //start the Dispatch Period
-        $start = $dp->start();
-
+        //try to start the Dispatch Period
         //confirm start of Dispatch Period or warn that there is already an active Dispatch Period
-        if($start == 0) {
+        try {
+            $dp->start();
             $output->writeln("<info>Dispatch period started @ " . $dp->getStartTime() . ".</info>");
-        } else if($start == 1) {
-            $output->writeln("<error>Dispatch period was already started @ " . $dp->getStartTime() . ".</error>");
+
+        } catch(BatchException $e) {
+            $output->writeln("<error>" . $e->getMessage() . "</error>");
             $output->writeln("<info>You must end this dispatch period before starting new one.</info>");
             $output->writeln("<info>To end this dispatch period run 'php bin/dispatchConsole.php stop'.</info>");
+
         }
 
         return Command::SUCCESS;
+
     }
 }

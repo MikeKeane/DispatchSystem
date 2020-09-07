@@ -5,6 +5,8 @@ namespace Commands;
 require_once __DIR__ . "/../../vendor/autoload.php";
 
 use App\DispatchPeriod;
+use Exception;
+use Exceptions\BatchException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -43,23 +45,27 @@ class EndBatchCommand extends Command {
         //get the active Dispatch Period
         $dp = DispatchPeriod::get();
 
-        $output->writeln("Uploading Consignments...");
 
-        $dp->uploadConsignments();
-
-        //not true (have to check status of uploads but they would fail so I've left this out)
-        $output->writeln("Consignments successfully uploaded");
 
         //stop the Dispatch Period
-        $stop = $dp->stop();
 
-        //output to confirm Dispatch Period has been stopped
-        if($stop == 1) {
-            $output->writeln("<info>There is no active Dispatch Period to stop.</info>");
-        } else {
-            $output->writeln("<info>Dispatch period stopped at " . date("Y-m-d H:i:s") . "</info>");
+        //start upload
+        try {
+            $output->writeln("Uploading Consignments...");
+            $dp->uploadConsignments();
+
+            //not true (have to check status of uploads but they would fail so I've left this out)
+            $output->writeln("Consignments successfully uploaded");
+        } catch(Exception $e) {
+            $output->writeln("<info>" . $e->getMessage() . "</info>");
         }
 
+        try {
+            $dp->stop();
+            $output->writeln("<info>Dispatch period stopped at " . date("Y-m-d H:i:s") . "</info>");
+        } catch(BatchException $be) {
+            $output->writeln("<info>" . $be->getMessage() . "</info>");
+        }
 
         return Command::SUCCESS;
     }

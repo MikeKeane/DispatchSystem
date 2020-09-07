@@ -2,6 +2,10 @@
 
 namespace App;
 
+include_once __DIR__ . "/../../vendor/autoload.php";
+
+use Exceptions\CourierException;
+use Exceptions\ConsignmentException;
 /**
  * Class Courier
  *
@@ -10,6 +14,9 @@ namespace App;
 class Courier {
     private $name;
 
+    private $availableCouriers = array(
+        "DPD", "ANC", "Royal Mail"
+    );
     /**
      * Stores upload configurations for all couriers.
      *
@@ -22,13 +29,27 @@ class Courier {
         "DPD" => array("method" => "email", "email_address" => "19mdk86@dpd.co.uk"),
         "Royal Mail" => array("method" => "FTP", "server" => "ftp.royalmail.co.uk", "username" => "anonymous", "password" => "mike.keane@gear4music.com")
     );
+
     /**
      * Courier constructor
      *
+     * @throws \Exceptions\CourierException
      * @param $name
      */
     public function __construct($name) {
-        $this->name = $name;
+        $create = false;
+        for($i = 0; $i < sizeof($this->availableCouriers) ; $i++) {
+            if($this->availableCouriers[$i] === $name) {
+                $create = true;
+                break;
+            }
+        }
+
+        if($create) {
+            $this->name = $name;
+        } else {
+            throw new CourierException("Courier " . $name . " is not available.");
+        }
     }
 
     /**
@@ -52,6 +73,7 @@ class Courier {
      * Algorithms are all stored here but calling this function ensures the incorrect
      * algorithm is not return from an instance of Courier.
      *
+     * @throws \Exceptions\ConsignmentException
      * @param $description - description of the consignment
      * @return Consignment
      */
@@ -82,7 +104,7 @@ class Courier {
                 break;
             default:
                 //throw error - courier not known
-
+                throw new ConsignmentException("Something went wrong generating the consignment number");
         }
 
         //set the number on the consignment
